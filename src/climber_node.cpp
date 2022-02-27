@@ -4,8 +4,153 @@
 #include <thread>
 #include <string>
 #include <mutex>
+#include "hmi_agent_node/HMI_Signals.h"
 
 ros::NodeHandle* node;
+
+
+enum class ClimberStates
+{
+
+	IDLE,
+	DEPLOY_INITIAL_HOOKS,
+	RETRACT_HOOKS,
+	GRAB_INITIAL_BAR,
+	PULL_UP,
+	STATIC_LATCH,
+	GRAB_NEXT_BAR,
+	STATIC_UNLATCH,
+	END,
+	STOPPED
+
+};
+
+static ClimberStates climber_state = ClimberStates::IDLE;
+static ClimberStates next_climber_state = ClimberStates::IDLE;
+
+static bool stop_climber = false;
+static bool deploy_hooks = false;
+static bool begin_climb = false;
+static bool retract_hooks = false;
+
+void hmi_signal_callback(const hmi_agent_node::HMI_Signals& msg)
+{
+    stop_climber = msg.stop_climber || stop_climber;
+	deploy_hooks = msg.deploy_hooks;
+	begin_climb = msg.begin_climb;
+	retract_hooks = msg.retract_hooks;
+}
+
+void step_state_machine()
+{
+	climber_state = next_climber_state;
+
+	switch(climber_state)
+	{
+		case ClimberStates::IDLE:
+		{
+			break;
+		}
+
+		case ClimberStates::DEPLOY_INITIAL_HOOKS:
+		{
+			break;
+		}
+
+		case ClimberStates::GRAB_INITIAL_BAR:
+		{
+			break;
+		}
+
+		case ClimberStates::PULL_UP:
+		{
+			break;
+		}
+
+		case ClimberStates::STATIC_LATCH:
+		{
+			break;
+		}
+
+		case ClimberStates::GRAB_NEXT_BAR:
+		{
+			break;
+		}
+
+		case ClimberStates::STATIC_UNLATCH:
+		{
+			break;
+		}
+
+		case ClimberStates::END:
+		{
+			break;
+		}
+
+		case ClimberStates::RETRACT_HOOKS:
+		{
+			break;
+		}
+
+		case ClimberStates::STOPPED:
+		{
+			break;
+		}
+	}
+
+	switch(climber_state)
+	{
+		case ClimberStates::IDLE:
+		{
+			break;
+		}
+
+		case ClimberStates::DEPLOY_INITIAL_HOOKS:
+		{
+			break;
+		}
+
+		case ClimberStates::GRAB_INITIAL_BAR:
+		{
+			break;
+		}
+
+		case ClimberStates::PULL_UP:
+		{
+			break;
+		}
+
+		case ClimberStates::STATIC_LATCH:
+		{
+			break;
+		}
+
+		case ClimberStates::GRAB_NEXT_BAR:
+		{
+			break;
+		}
+
+		case ClimberStates::STATIC_UNLATCH:
+		{
+			break;
+		}
+
+		case ClimberStates::END:
+		{
+			break;
+		}
+
+		case ClimberStates::RETRACT_HOOKS:
+		{
+			break;
+		}
+
+		case ClimberStates::STOPPED:
+		{
+			break;
+		}
+	}	
+}
 
 int main(int argc, char **argv)
 {
@@ -25,6 +170,16 @@ int main(int argc, char **argv)
 
 	node = &n;
 
-	ros::spin();
+	ros::Subscriber hmi_subscribe = node->subscribe("/HMISignals", 1, hmi_signal_callback);
+
+	ros::Rate rate(100);
+
+	while(ros::ok())
+	{
+		ros::spinOnce();
+		step_state_machine();
+		rate.sleep();
+	}
+
 	return 0;
 }
