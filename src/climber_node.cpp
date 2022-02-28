@@ -125,8 +125,10 @@ void step_state_machine()
 
 	ros::Duration time_in_state = ros::Time::now() - time_state_entered;
 
-	climber_state = next_climber_state;
-
+	if(stop_climber)
+	{
+		climber_state = ClimberStates::STOPPED;
+	}
 	switch(climber_state)
 	{
 		case ClimberStates::IDLE: //Stop all motors
@@ -194,7 +196,10 @@ void step_state_machine()
 		{
 			climber_solenoid->set(Piston::PistonState::ON);
 
-			if()
+			if(time_in_state > ros::Duration(0.5))
+			{
+				climber_state = ClimberStates::GRAB_NEXT_BAR_UNWINCH_COMPLETELY;
+			}
 			break;
 		}
 
@@ -203,12 +208,20 @@ void step_state_machine()
 			
 			left_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 15, 0);
 			right_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 15, 0);
+			if(right_climber_position > 14.5 && left_climber_position > 14.5)
+			{
+				climber_state = ClimberStates::GRAB_NEXT_BAR_RETRACT_PISTONS;
+			}
 			break;
 		}
 
 		case ClimberStates::GRAB_NEXT_BAR_RETRACT_PISTONS://actuate pistons
 		{
 			climber_solenoid->set(Piston::PistonState::OFF);
+			if(time_in_state > ros::Duration(0.5))
+			{
+				climber_state = ClimberStates::GRAB_NEXT_BAR_PULL_UP;
+			}
 			break;
 		}
 
@@ -216,11 +229,16 @@ void step_state_machine()
 		case ClimberStates::GRAB_NEXT_BAR_PULL_UP://pull up
 		{
 			auto_balance_climb(4.0);
+			if(right_climber_position < 4.5 && left_climber_position < 4.5)
+			{
+				climber_state = ClimberStates::STATIC_UNLATCH;
+			}
 			break;
 		}
 
 		case ClimberStates::STATIC_UNLATCH://no op
 		{
+			climber_state = ClimberStates::END;
 			break;
 		}
 
@@ -239,7 +257,8 @@ void step_state_machine()
 
 		case ClimberStates::STOPPED://Turn off all motors and stay there
 		{
-			
+			left_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
+			right_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
 			break;
 		}
 	}
