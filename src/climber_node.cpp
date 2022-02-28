@@ -116,6 +116,15 @@ void auto_balance_climb(double target_position)
 
 void step_state_machine()
 {
+	static ros::Time time_state_entered = ros::Time::now();
+
+	if(climber_state != next_climber_state)
+	{
+		time_state_entered = ros::Time::now();
+	}
+
+	ros::Duration time_in_state = ros::Time::now() - time_state_entered;
+
 	climber_state = next_climber_state;
 
 	switch(climber_state)
