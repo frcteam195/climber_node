@@ -7,7 +7,7 @@
 #include <map>
 #include "hmi_agent_node/HMI_Signals.h"
 #include "ck_utilities/Motor.hpp"
-#include "ck_utilities/Piston.hpp"
+#include "ck_utilities/Solenoid.hpp"
 #include "rio_control_node/Robot_Status.h"
 #include "rio_control_node/Motor_Status.h"
 #include "rio_control_node/Motor_Info.h"
@@ -32,7 +32,7 @@ static Motor* left_climber_follower;
 static Motor* right_climber_master;
 static Motor* right_climber_follower;
 
-static Piston* climber_solenoid;
+static Solenoid* climber_solenoid;
 
 static double imu_roll_rad;
 
@@ -135,7 +135,7 @@ void step_state_machine()
 		{
 			left_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
 			right_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
-			climber_solenoid->set(Piston::PistonState::OFF);
+			climber_solenoid->set(Solenoid::SolenoidState::OFF);
 		
 			if(deploy_hooks)
 			{
@@ -192,9 +192,9 @@ void step_state_machine()
 			break;
 		}
 
-		case ClimberStates::GRAB_NEXT_BAR_EXTEND_PISTONS://activate pistons, 
+		case ClimberStates::GRAB_NEXT_BAR_EXTEND_PISTONS://activate solenoids, 
 		{
-			climber_solenoid->set(Piston::PistonState::ON);
+			climber_solenoid->set(Solenoid::SolenoidState::ON);
 
 			if(time_in_state > ros::Duration(0.5))
 			{
@@ -215,9 +215,9 @@ void step_state_machine()
 			break;
 		}
 
-		case ClimberStates::GRAB_NEXT_BAR_RETRACT_PISTONS://actuate pistons
+		case ClimberStates::GRAB_NEXT_BAR_RETRACT_PISTONS://actuate solenoids
 		{
-			climber_solenoid->set(Piston::PistonState::OFF);
+			climber_solenoid->set(Solenoid::SolenoidState::OFF);
 			if(time_in_state > ros::Duration(0.5))
 			{
 				climber_state = ClimberStates::GRAB_NEXT_BAR_PULL_UP;
@@ -293,7 +293,7 @@ int main(int argc, char **argv)
 	left_climber_follower = new Motor(LEFT_CLIMBER_FOLLOWER_CAN_ID, Motor::Motor_Type::TALON_FX);
 	right_climber_follower = new Motor(RIGHT_CLIMBER_FOLLOWER_CAN_ID, Motor::Motor_Type::TALON_FX);
 
-	climber_solenoid = new Piston(CLIMBER_SOLENOID_ID, Piston::PistonType::SINGLE);
+	climber_solenoid = new Solenoid(CLIMBER_SOLENOID_ID, Solenoid::SolenoidType::SINGLE);
 
 
 	ros::Rate rate(100);
