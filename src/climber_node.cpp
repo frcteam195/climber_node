@@ -291,7 +291,11 @@ int main(int argc, char **argv)
 	left_climber_master = new Motor(LEFT_CLIMBER_MASTER_CAN_ID, Motor::Motor_Type::TALON_FX);
 	right_climber_master = new Motor(RIGHT_CLIMBER_MASTER_CAN_ID, Motor::Motor_Type::TALON_FX);
 	left_climber_follower = new Motor(LEFT_CLIMBER_FOLLOWER_CAN_ID, Motor::Motor_Type::TALON_FX);
+	left_climber_follower->config().set_follower(true, LEFT_CLIMBER_MASTER_CAN_ID);
+	left_climber_follower->config().apply();
 	right_climber_follower = new Motor(RIGHT_CLIMBER_FOLLOWER_CAN_ID, Motor::Motor_Type::TALON_FX);
+	right_climber_follower->config().set_follower(true, RIGHT_CLIMBER_MASTER_CAN_ID);
+	right_climber_follower->config().apply();
 
 	climber_solenoid = new Solenoid(CLIMBER_SOLENOID_ID, Solenoid::SolenoidType::SINGLE);
 
