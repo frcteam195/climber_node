@@ -17,9 +17,9 @@
 
 
 #define LEFT_CLIMBER_MASTER_CAN_ID 12
-#define LEFT_CLIMBER_FOLLOWER_CAN_ID 13
+// #define LEFT_CLIMBER_FOLLOWER_CAN_ID 13
 #define RIGHT_CLIMBER_MASTER_CAN_ID 14
-#define RIGHT_CLIMBER_FOLLOWER_CAN_ID 15
+// #define RIGHT_CLIMBER_FOLLOWER_CAN_ID 15
 
 #define CLIMBER_SOLENOID_ID 4
 
@@ -28,9 +28,9 @@ ros::NodeHandle* node;
 static constexpr double CLIMBER_BALANCE_GAIN = 0.0795;
 
 static Motor* left_climber_master;
-static Motor* left_climber_follower;
+// static Motor* left_climber_follower;
 static Motor* right_climber_master;
-static Motor* right_climber_follower;
+// static Motor* right_climber_follower;
 
 static Solenoid* climber_solenoid;
 
@@ -290,12 +290,12 @@ int main(int argc, char **argv)
 
 	left_climber_master = new Motor(LEFT_CLIMBER_MASTER_CAN_ID, Motor::Motor_Type::TALON_FX);
 	right_climber_master = new Motor(RIGHT_CLIMBER_MASTER_CAN_ID, Motor::Motor_Type::TALON_FX);
-	left_climber_follower = new Motor(LEFT_CLIMBER_FOLLOWER_CAN_ID, Motor::Motor_Type::TALON_FX);
-	left_climber_follower->config().set_follower(true, LEFT_CLIMBER_MASTER_CAN_ID);
-	left_climber_follower->config().apply();
-	right_climber_follower = new Motor(RIGHT_CLIMBER_FOLLOWER_CAN_ID, Motor::Motor_Type::TALON_FX);
-	right_climber_follower->config().set_follower(true, RIGHT_CLIMBER_MASTER_CAN_ID);
-	right_climber_follower->config().apply();
+	// left_climber_follower = new Motor(LEFT_CLIMBER_FOLLOWER_CAN_ID, Motor::Motor_Type::TALON_FX);
+	// left_climber_follower->config().set_follower(true, LEFT_CLIMBER_MASTER_CAN_ID);
+	// left_climber_follower->config().apply();
+	// right_climber_follower = new Motor(RIGHT_CLIMBER_FOLLOWER_CAN_ID, Motor::Motor_Type::TALON_FX);
+	// right_climber_follower->config().set_follower(true, RIGHT_CLIMBER_MASTER_CAN_ID);
+	// right_climber_follower->config().apply();
 
 	climber_solenoid = new Solenoid(CLIMBER_SOLENOID_ID, Solenoid::SolenoidType::SINGLE);
 
