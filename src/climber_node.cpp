@@ -68,6 +68,101 @@ static std::map<uint16_t, rio_control_node::Motor_Info> motor_status_map;
 static double left_climber_position = 0.0;
 static double right_climber_position = 0.0;
 
+
+std::string climber_state_to_string(ClimberStates state)
+{
+    switch (state)
+    {
+        case ClimberStates::IDLE:
+        {
+            return "IDLE";
+            break;
+        }
+        case ClimberStates::DEPLOY_INITIAL_HOOKS:
+        {
+            return "DEPLOY_INITIAL_HOOKS";
+            break;
+        }
+        case ClimberStates::RETRACT_HOOKS:
+        {   
+            return "RETRACT_HOOKS";
+            break;
+        }
+        case ClimberStates::GRAB_INITIAL_BAR:
+        {
+            return "GRAB_INITIAL_BAR";
+            break;
+        }
+        case ClimberStates::PULL_UP:
+        {
+            return "PULL_UP";
+            break;
+        }
+        case ClimberStates::STATIC_LATCH:
+        {
+            return "STATIC_LATCH";
+            break;
+        }
+		case ClimberStates::GRAB_NEXT_BAR_INITIAL_UNWINCH:
+        {
+            return "GRAB_NEXT_BAR_INITIAL_UNWINCH";
+            break;
+        }
+        case ClimberStates::GRAB_NEXT_BAR_EXTEND_PISTONS:
+        {
+            return "GRAB_NEXT_BAR_EXTEND_PISTONS";
+            break;
+        }
+        case ClimberStates::GRAB_NEXT_BAR_UNWINCH_COMPLETELY:
+        {   
+            return "GRAB_NEXT_BAR_UNWINCH_COMPLETELY";
+            break;
+        }
+        case ClimberStates::GRAB_NEXT_BAR_RETRACT_PISTONS:
+        {
+            return "GRAB_NEXT_BAR_RETRACT_PISTONS";
+            break;
+        }
+        case ClimberStates::GRAB_NEXT_BAR_PULL_UP:
+        {
+            return "GRAB_NEXT_BAR_PULL_UP";
+            break;
+        }
+        case ClimberStates::STATIC_UNLATCH:
+        {
+            return "STATIC_UNLATCH";
+            break;
+        }
+		case ClimberStates::END:
+        {
+            return "END";
+            break;
+        }
+		case ClimberStates::STOPPED:
+        {
+            return "STOPPED";
+            break;
+        }
+    }
+    return "INVALID";
+}
+
+
+void publish_diagnostic_data()
+{
+    static ros::Publisher diagnostic_publisher = node->advertise<climber_node::climber_diagnostics>("/ClimberNodeDiagnostics", 1);
+    climber_node::climber_diagnostics diagnostics;
+    diagnostics.climber_state = climber_state_to_string(climber_state);
+    diagnostics.next_climber_state = climber_state_to_string(next_climber_state);
+    diagnostics.stop_climber = stop_climber;
+    diagnostics.deploy_hooks = deploy_hooks;
+    diagnostics.begin_climb = begin_climb;
+    diagnostics.retract_hooks = retract_hooks;
+    diagnostics.left_climber_position = left_climber_position;
+    diagnostics.right_climber_position = right_climber_position;
+    diagnostic_publisher.publish(diagnostics);
+}
+
 void hmi_signal_callback(const hmi_agent_node::HMI_Signals& msg)
 {
     stop_climber = msg.stop_climber || stop_climber;

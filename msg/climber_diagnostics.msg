@@ -1,0 +1,10 @@
+bool stop_climber
+bool deploy_hooks
+bool begin_climb
+bool retract_hooks
+
+double left_climber_position
+double right_climber_position
+
+string climber_state
+string next_climber_state
