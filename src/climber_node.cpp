@@ -232,7 +232,7 @@ void step_state_machine()
 		{
 			left_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
 			right_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
-			climber_solenoid->set(Solenoid::SolenoidState::OFF);
+			climber_solenoid->set(Solenoid::SolenoidState::ON);
 		
 			if(deploy_hooks)
 			{
