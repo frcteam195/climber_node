@@ -14,6 +14,7 @@
 #include "nav_msgs/Odometry.h"
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2/LinearMath/Matrix3x3.h"
+#include "climber_node/Climber_Diagnostics.h"
 
 
 #define LEFT_CLIMBER_MASTER_CAN_ID 12
@@ -150,8 +151,8 @@ std::string climber_state_to_string(ClimberStates state)
 
 void publish_diagnostic_data()
 {
-    static ros::Publisher diagnostic_publisher = node->advertise<climber_node::climber_diagnostics>("/ClimberNodeDiagnostics", 1);
-    climber_node::climber_diagnostics diagnostics;
+    static ros::Publisher diagnostic_publisher = node->advertise<climber_node::Climber_Diagnostics>("/ClimberNodeDiagnostics", 1);
+    climber_node::Climber_Diagnostics diagnostics;
     diagnostics.climber_state = climber_state_to_string(climber_state);
     diagnostics.next_climber_state = climber_state_to_string(next_climber_state);
     diagnostics.stop_climber = stop_climber;
