@@ -402,6 +402,7 @@ int main(int argc, char **argv)
 	{
 		ros::spinOnce();
 		step_state_machine();
+		publish_diagnostic_data();
 		rate.sleep();
 	}
 
