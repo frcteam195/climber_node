@@ -22,8 +22,8 @@
 #define RIGHT_CLIMBER_MASTER_CAN_ID 14
 // #define RIGHT_CLIMBER_FOLLOWER_CAN_ID 15
 
-#define CLIMBER_SOLENOID1_ID 6
-#define CLIMBER_SOLENOID2_ID 7
+#define CLIMBER_MOVEABLE_ARM_SOLENOID_ID 6
+#define CLIMBER_STATIC_HOOKS_SOLENOID_ID 7
 
 ros::NodeHandle* node;
 
@@ -394,7 +394,7 @@ int main(int argc, char **argv)
 	// right_climber_follower->config().set_follower(true, RIGHT_CLIMBER_MASTER_CAN_ID);
 	// right_climber_follower->config().apply();
 
-	climber_solenoid = new Solenoid(CLIMBER_SOLENOID1_ID, Solenoid::SolenoidType::SINGLE);
+	climber_solenoid = new Solenoid(CLIMBER_MOVEABLE_ARM_SOLENOID_ID, Solenoid::SolenoidType::SINGLE);
 
 
 	ros::Rate rate(100);
