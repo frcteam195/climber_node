@@ -30,10 +30,13 @@ ros::NodeHandle* node;
 
 static constexpr double CLIMBER_BALANCE_GAIN = 0.0795;
 static constexpr double CLIMBER_FULL_RETRACTION = 0;
-static constexpr double CLIMBER_INITIAL_GRAB_HEIGHT = 12;
-static constexpr double CLIMBER_PARTIAL_RELEASE_HEIGHT = 6;
-static constexpr double CLIMBER_MAX_EXTENSION = 16;
+static constexpr double CLIMBER_HANDOFF_HEIGHT = 28841.0 / 2048.0 / 20.0;
+static constexpr double CLIMBER_INITIAL_GRAB_HEIGHT = 318150.0 / 2048.0 / 20.0;
+static constexpr double CLIMBER_PARTIAL_RELEASE_HEIGHT = 97875.0 / 2048.0 / 20.0;
+static constexpr double CLIMBER_MAX_EXTENSION = 393379.0 / 2048.0 / 20.0;
+static constexpr double CLIMBER_MAX_LIMIT = 446960.0 / 2048.0 / 20.0;
 static constexpr double CLIMBER_HEIGHT_DELTA = 0.5;
+
 
 static Motor* left_climber_master;
 // static Motor* left_climber_follower;
@@ -228,10 +231,10 @@ void step_state_machine()
 
 		case ClimberStates::PULL_UP: //Winch down hooks
 		{
-			auto_balance_climb(CLIMBER_FULL_RETRACTION);
+			auto_balance_climb(CLIMBER_HANDOFF_HEIGHT);
 
-			if(ck::math::inRange(CLIMBER_FULL_RETRACTION - left_climber_position, CLIMBER_HEIGHT_DELTA)
-				&& ck::math::inRange(CLIMBER_FULL_RETRACTION - right_climber_position, CLIMBER_HEIGHT_DELTA))
+			if(ck::math::inRange(CLIMBER_HANDOFF_HEIGHT - left_climber_position, CLIMBER_HEIGHT_DELTA)
+				&& ck::math::inRange(CLIMBER_HANDOFF_HEIGHT - right_climber_position, CLIMBER_HEIGHT_DELTA))
 			{
 				climber_state = ClimberStates::STATIC_LATCH;
 			}
@@ -290,9 +293,9 @@ void step_state_machine()
 
 		case ClimberStates::GRAB_NEXT_BAR_PULL_UP://pull up
 		{
-			auto_balance_climb(CLIMBER_FULL_RETRACTION);
-			if(ck::math::inRange(CLIMBER_FULL_RETRACTION - left_climber_position, CLIMBER_HEIGHT_DELTA)
-				&& ck::math::inRange(CLIMBER_FULL_RETRACTION - right_climber_position, CLIMBER_HEIGHT_DELTA))
+			auto_balance_climb(CLIMBER_HANDOFF_HEIGHT);
+			if(ck::math::inRange(CLIMBER_HANDOFF_HEIGHT - left_climber_position, CLIMBER_HEIGHT_DELTA)
+				&& ck::math::inRange(CLIMBER_HANDOFF_HEIGHT - right_climber_position, CLIMBER_HEIGHT_DELTA))
 			{
 				climber_state = ClimberStates::STATIC_UNLATCH;
 			}
@@ -329,6 +332,25 @@ void step_state_machine()
 	
 }
 
+void config_climber_motor(Motor* m)
+{
+	m->config().set_supply_current_limit(true, 30, 0, 0);
+	m->config().set_voltage_compensation_saturation(10);
+	m->config().set_voltage_compensation_enabled(true);
+	m->config().set_neutral_mode(MotorConfig::NeutralMode::BRAKE);
+	m->config().set_forward_soft_limit(CLIMBER_MAX_LIMIT);
+	m->config().set_forward_soft_limit_enable(true);
+	m->config().set_reverse_soft_limit(-0.2);
+	m->config().set_reverse_soft_limit_enable(true);
+	m->config().set_kP(0.41);
+	m->config().set_kD(0.72);
+	m->config().set_kF(0.060546875);
+	m->config().set_motion_cruise_velocity(13000);
+	m->config().set_motion_acceleration(22000);
+	m->config().set_motion_s_curve_strength(5);
+	m->config().apply();
+}
+
 int main(int argc, char **argv)
 {
 	/**
@@ -353,12 +375,8 @@ int main(int argc, char **argv)
 
 	left_climber_master = new Motor(LEFT_CLIMBER_MASTER_CAN_ID, Motor::Motor_Type::TALON_FX);
 	right_climber_master = new Motor(RIGHT_CLIMBER_MASTER_CAN_ID, Motor::Motor_Type::TALON_FX);
-	// left_climber_follower = new Motor(LEFT_CLIMBER_FOLLOWER_CAN_ID, Motor::Motor_Type::TALON_FX);
-	// left_climber_follower->config().set_follower(true, LEFT_CLIMBER_MASTER_CAN_ID);
-	// left_climber_follower->config().apply();
-	// right_climber_follower = new Motor(RIGHT_CLIMBER_FOLLOWER_CAN_ID, Motor::Motor_Type::TALON_FX);
-	// right_climber_follower->config().set_follower(true, RIGHT_CLIMBER_MASTER_CAN_ID);
-	// right_climber_follower->config().apply();
+	config_climber_motor(left_climber_master);
+	config_climber_motor(right_climber_master);
 
 	climber_arm_solenoid = new Solenoid(CLIMBER_MOVEABLE_ARM_SOLENOID_ID, Solenoid::SolenoidType::SINGLE);
 	climber_static_hooks_solenoid = new Solenoid(CLIMBER_STATIC_HOOKS_SOLENOID_ID, Solenoid::SolenoidType::SINGLE);
