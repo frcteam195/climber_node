@@ -342,8 +342,8 @@ void config_climber_motor(Motor* m)
 	m->config().set_forward_soft_limit_enable(true);
 	m->config().set_reverse_soft_limit(-0.2);
 	m->config().set_reverse_soft_limit_enable(true);
-	m->config().set_kP(0.41);
-	m->config().set_kD(0.72);
+	m->config().set_kP(0.1);
+	m->config().set_kD(0.14);
 	m->config().set_kF(0.060546875);
 	m->config().set_motion_cruise_velocity(13000);
 	m->config().set_motion_acceleration(22000);
