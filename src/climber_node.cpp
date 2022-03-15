@@ -43,7 +43,6 @@ enum class ClimberStates
 
 	IDLE,
 	DEPLOY_INITIAL_HOOKS,
-	RETRACT_HOOKS,
 	GRAB_INITIAL_BAR,
 	PULL_UP,
 	STATIC_LATCH,
@@ -56,6 +55,23 @@ enum class ClimberStates
 	END,
 	STOPPED
 
+};
+
+std::map<ClimberStates,std::string> climber_state_lookup = 
+{
+	{ClimberStates::IDLE, "IDLE"},
+	{ClimberStates::DEPLOY_INITIAL_HOOKS, "DEPLOY_INITITAL_HOOKS"},
+	{ClimberStates::GRAB_INITIAL_BAR, "GRAB_INITIAL_BAR"},
+	{ClimberStates::PULL_UP, "PULL_UP"},
+	{ClimberStates::STATIC_LATCH, "STATIC_LATCH"},
+	{ClimberStates::GRAB_NEXT_BAR_INITIAL_UNWINCH, "GRAB_NEXT_BAR_INITIAL_UNWINCH"},
+	{ClimberStates::GRAB_NEXT_BAR_EXTEND_PISTONS, "GRAB_NEXT_BAR_EXTEND_PISTONS"},
+	{ClimberStates::GRAB_NEXT_BAR_UNWINCH_COMPLETELY, "GRAB_NEXT_BAR_UNWINCH_COMPLETLY"},
+	{ClimberStates::GRAB_NEXT_BAR_RETRACT_PISTONS, "GRAB_NEXT_BAR_RETRACT_PISTONS"},
+	{ClimberStates::GRAB_NEXT_BAR_PULL_UP, "GRAB_NEXT_BAR_PULL_UP"},
+	{ClimberStates::STATIC_UNLATCH, "STATIC_UNLATCH"},
+	{ClimberStates::END, "END"},
+	{ClimberStates::STOPPED, "STOPPED"}
 };
 
 static ClimberStates climber_state = ClimberStates::IDLE;
@@ -73,80 +89,11 @@ static double right_climber_position = 0.0;
 
 std::string climber_state_to_string(ClimberStates state)
 {
-    switch (state)
-    {
-        case ClimberStates::IDLE:
-        {
-            return "IDLE";
-            break;
-        }
-        case ClimberStates::DEPLOY_INITIAL_HOOKS:
-        {
-            return "DEPLOY_INITIAL_HOOKS";
-            break;
-        }
-        case ClimberStates::RETRACT_HOOKS:
-        {   
-            return "RETRACT_HOOKS";
-            break;
-        }
-        case ClimberStates::GRAB_INITIAL_BAR:
-        {
-            return "GRAB_INITIAL_BAR";
-            break;
-        }
-        case ClimberStates::PULL_UP:
-        {
-            return "PULL_UP";
-            break;
-        }
-        case ClimberStates::STATIC_LATCH:
-        {
-            return "STATIC_LATCH";
-            break;
-        }
-		case ClimberStates::GRAB_NEXT_BAR_INITIAL_UNWINCH:
-        {
-            return "GRAB_NEXT_BAR_INITIAL_UNWINCH";
-            break;
-        }
-        case ClimberStates::GRAB_NEXT_BAR_EXTEND_PISTONS:
-        {
-            return "GRAB_NEXT_BAR_EXTEND_PISTONS";
-            break;
-        }
-        case ClimberStates::GRAB_NEXT_BAR_UNWINCH_COMPLETELY:
-        {   
-            return "GRAB_NEXT_BAR_UNWINCH_COMPLETELY";
-            break;
-        }
-        case ClimberStates::GRAB_NEXT_BAR_RETRACT_PISTONS:
-        {
-            return "GRAB_NEXT_BAR_RETRACT_PISTONS";
-            break;
-        }
-        case ClimberStates::GRAB_NEXT_BAR_PULL_UP:
-        {
-            return "GRAB_NEXT_BAR_PULL_UP";
-            break;
-        }
-        case ClimberStates::STATIC_UNLATCH:
-        {
-            return "STATIC_UNLATCH";
-            break;
-        }
-		case ClimberStates::END:
-        {
-            return "END";
-            break;
-        }
-		case ClimberStates::STOPPED:
-        {
-            return "STOPPED";
-            break;
-        }
-    }
-    return "INVALID";
+    if(climber_state_lookup.count(state))
+	{
+		return climber_state_lookup[state];
+	}
+	return "INVALID";
 }
 
 
@@ -206,7 +153,8 @@ void imu_sensor_callback(const nav_msgs::Odometry& msg)
 
 void auto_balance_climb(double target_position)
 {
-	double arbFF = CLIMBER_BALANCE_GAIN * imu_roll_rad;
+	//double arbFF = CLIMBER_BALANCE_GAIN * imu_roll_rad;
+	double arbFF = 0;
 	left_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, target_position, arbFF);
 	right_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, target_position, -arbFF);
 }
@@ -230,8 +178,8 @@ void step_state_machine()
 	{
 		case ClimberStates::IDLE: //Stop all motors
 		{
-			left_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
-			right_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
+			left_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 0, 0);
+			right_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 0, 0);
 			climber_solenoid->set(Solenoid::SolenoidState::ON);
 		
 			if(deploy_hooks)
@@ -244,10 +192,11 @@ void step_state_machine()
 
 		case ClimberStates::DEPLOY_INITIAL_HOOKS: //Winch up hooks
 		{
-			left_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 15, 0);
-			right_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 15, 0);
+			left_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 10, 0);
+			right_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 10, 0);
+			climber_solenoid->set(Solenoid::SolenoidState::OFF);
 
-			if(left_climber_position > 14.5 && right_climber_position > 14.5)
+			if(left_climber_position > 9.5 && right_climber_position > 9.5)
 			{
 				climber_state = ClimberStates::GRAB_INITIAL_BAR;
 			}
@@ -256,15 +205,22 @@ void step_state_machine()
 
 		case ClimberStates::GRAB_INITIAL_BAR: //no op
 		{
-			climber_state = ClimberStates::PULL_UP;
+			if(retract_hooks)
+			{
+				climber_state = ClimberStates::IDLE;
+			}
+			if (begin_climb)
+			{
+				climber_state = ClimberStates::PULL_UP;
+			}
 			break;
 		}
 
 		case ClimberStates::PULL_UP: //Winch down hooks
 		{
-			auto_balance_climb(4.0);
+			auto_balance_climb(0);
 
-			if(left_climber_position < 4.5 && right_climber_position < 4.5)
+			if(left_climber_position < 0.5 && right_climber_position < 0.5)
 			{
 				climber_state = ClimberStates::STATIC_LATCH;
 			}
@@ -281,8 +237,9 @@ void step_state_machine()
 		{
 			left_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 6.0, 0);
 			right_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 6.0, 0);
+			climber_solenoid->set(Solenoid::SolenoidState::ON);
 
-			if(right_climber_position > 5.5 && left_climber_position > 5.5)
+			if(time_in_state > ros::Duration(0.5) && right_climber_position > 5.5 && left_climber_position > 5.5)
 			{
 				climber_state = ClimberStates::GRAB_NEXT_BAR_EXTEND_PISTONS;
 			}
@@ -291,12 +248,7 @@ void step_state_machine()
 
 		case ClimberStates::GRAB_NEXT_BAR_EXTEND_PISTONS://activate solenoids, 
 		{
-			climber_solenoid->set(Solenoid::SolenoidState::ON);
-
-			if(time_in_state > ros::Duration(0.5))
-			{
-				climber_state = ClimberStates::GRAB_NEXT_BAR_UNWINCH_COMPLETELY;
-			}
+			climber_state = ClimberStates::GRAB_NEXT_BAR_UNWINCH_COMPLETELY;
 			break;
 		}
 
@@ -325,8 +277,8 @@ void step_state_machine()
 
 		case ClimberStates::GRAB_NEXT_BAR_PULL_UP://pull up
 		{
-			auto_balance_climb(4.0);
-			if(right_climber_position < 4.5 && left_climber_position < 4.5)
+			auto_balance_climb(0);
+			if(right_climber_position < 0.5 && left_climber_position < 0.5)
 			{
 				climber_state = ClimberStates::STATIC_UNLATCH;
 			}
@@ -342,13 +294,6 @@ void step_state_machine()
 		case ClimberStates::END://End
 		{
 			//deploy fireworks
-			break;
-		}
-
-		case ClimberStates::RETRACT_HOOKS://Winch down hooks, go to idle
-		{
-			left_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 4.0, 0);
-			right_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 4.0, 0);
 			break;
 		}
 
