@@ -30,13 +30,13 @@ ros::NodeHandle* node;
 
 static constexpr double CLIMBER_BALANCE_GAIN = 0.0795;
 static constexpr double CLIMBER_FULL_RETRACTION = 0;
-static constexpr double CLIMBER_HANDOFF_HEIGHT = (8841.0 / 2048.0) / 20.0;
-static constexpr double CLIMBER_WAIT_HEIGHT = (206689.0 / 2048.0) / 20.0;
+static constexpr double CLIMBER_HANDOFF_HEIGHT = (6341.0 / 2048.0) / 20.0;
+static constexpr double CLIMBER_WAIT_HEIGHT = (160689.0 / 2048.0) / 20.0;
 static constexpr double CLIMBER_INITIAL_GRAB_HEIGHT = (318150.0 / 2048.0) / 20.0;
 static constexpr double CLIMBER_PARTIAL_RELEASE_HEIGHT = (97875.0 / 2048.0) / 20.0;
 static constexpr double CLIMBER_MAX_EXTENSION = (393379.0 / 2048.0) / 20.0;
 static constexpr double CLIMBER_MAX_LIMIT = (446960.0 / 2048.0) / 20.0;
-static constexpr double CLIMBER_HEIGHT_DELTA = 0.45;
+static constexpr double CLIMBER_HEIGHT_DELTA = 0.25;
 
 
 static Motor* left_climber_master;
