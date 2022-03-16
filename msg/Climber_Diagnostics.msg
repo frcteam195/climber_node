@@ -6,6 +6,8 @@ bool forced_reset_retract_hooks
 
 float64 left_climber_position
 float64 right_climber_position
+float64 pitch
+float64 pitch_rad_per_sec
 
 string climber_state
 string next_climber_state

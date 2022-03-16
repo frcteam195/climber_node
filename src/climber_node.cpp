@@ -30,7 +30,7 @@ ros::NodeHandle* node;
 
 static constexpr double CLIMBER_BALANCE_GAIN = 0.0795;
 static constexpr double CLIMBER_FULL_RETRACTION = 0;
-static constexpr double CLIMBER_HANDOFF_HEIGHT = (6341.0 / 2048.0) / 20.0;
+static constexpr double CLIMBER_HANDOFF_HEIGHT = (5341.0 / 2048.0) / 20.0;
 static constexpr double CLIMBER_WAIT_HEIGHT = (160689.0 / 2048.0) / 20.0;
 static constexpr double CLIMBER_INITIAL_GRAB_HEIGHT = (318150.0 / 2048.0) / 20.0;
 static constexpr double CLIMBER_PARTIAL_RELEASE_HEIGHT = (97875.0 / 2048.0) / 20.0;
@@ -48,6 +48,10 @@ static Solenoid* climber_arm_solenoid;
 static Solenoid* climber_static_hooks_solenoid;
 
 static double imu_roll_rad = 0;
+static double imu_pitch_rad = 0;
+static double imu_pitch_rad_per_sec = 0;
+static double prev_imu_pitch_rad = 0;
+static ros::Time prev_time_imu = ros::Time(0);
 static double bar_counter = 0;
 
 enum class ClimberStates
@@ -65,6 +69,7 @@ enum class ClimberStates
 	GRAB_NEXT_BAR_PULL_UP,
 	STATIC_UNLATCH,
 	FINISH_WINCHING,
+	WAIT_FOR_STABLE,
 	END,
 	STOPPED
 
@@ -84,6 +89,7 @@ std::map<ClimberStates,std::string> climber_state_lookup =
 	{ClimberStates::GRAB_NEXT_BAR_PULL_UP, "GRAB_NEXT_BAR_PULL_UP"},
 	{ClimberStates::STATIC_UNLATCH, "STATIC_UNLATCH"},
 	{ClimberStates::FINISH_WINCHING, "FINISH_WINCHING"},
+	{ClimberStates::WAIT_FOR_STABLE, "WAIT_FOR_STABLE"},
 	{ClimberStates::END, "END"},
 	{ClimberStates::STOPPED, "STOPPED"}
 };
@@ -125,6 +131,8 @@ void publish_diagnostic_data()
     diagnostics.left_climber_position = left_climber_position;
     diagnostics.right_climber_position = right_climber_position;
 	diagnostics.forced_reset_retract_hooks = forced_reset_retract_hooks;
+	diagnostics.pitch = imu_pitch_rad;
+	diagnostics.pitch_rad_per_sec = imu_pitch_rad_per_sec;
     diagnostic_publisher.publish(diagnostics);
 }
 
@@ -158,13 +166,26 @@ void motor_status_callback(const rio_control_node::Motor_Status& msg)
 
 void imu_sensor_callback(const nav_msgs::Odometry& msg)
 {
+	static double averager = 0;
 	tf2::Quaternion q(msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, 
 	msg.pose.pose.orientation.z, msg.pose.pose.orientation.w);
 	tf2::Matrix3x3 m(q);
 	tf2Scalar roll,pitch,yaw;
 	m.getRPY(roll,pitch,yaw);
 	imu_roll_rad = roll;
-	(void) pitch;
+	imu_pitch_rad = pitch;
+	if (prev_time_imu != ros::Time(0))
+	{
+		ros::Duration dt = ros::Time::now() - prev_time_imu;
+		averager = ((imu_pitch_rad - prev_imu_pitch_rad) / (dt.toNSec()/1000000000.0));
+		imu_pitch_rad_per_sec = (imu_pitch_rad_per_sec + averager)/2.0;
+	}
+	else
+	{
+		imu_pitch_rad_per_sec = 0;
+	}
+	prev_time_imu = ros::Time::now();
+	prev_imu_pitch_rad = pitch;
 	(void) yaw;
 }
 
@@ -294,7 +315,7 @@ void step_state_machine()
 		case ClimberStates::GRAB_NEXT_BAR_RETRACT_PISTONS://actuate solenoids
 		{
 			climber_arm_solenoid->set(Solenoid::SolenoidState::OFF);
-			if(time_in_state > ros::Duration(0.5))
+			if(time_in_state > ros::Duration(0.5) || (time_in_state > ros::Duration(0.5) && bar_counter > 0 && imu_pitch_rad > 0 && imu_pitch_rad_per_sec > 1))
 			{
 				next_climber_state = ClimberStates::GRAB_NEXT_BAR_PULL_UP;
 			}
@@ -319,7 +340,7 @@ void step_state_machine()
 			{
 				next_climber_state = ClimberStates::END;
 			}
-			else if (time_in_state > ros::Duration(4)){
+			else if (time_in_state > ros::Duration(4) || (time_in_state > ros::Duration(1) && imu_pitch_rad < -0.12 && imu_pitch_rad_per_sec < -1)){
 				bar_counter++;
 				next_climber_state = ClimberStates::FINISH_WINCHING;
 			}
@@ -332,6 +353,14 @@ void step_state_machine()
 			if(ck::math::inRange(CLIMBER_HANDOFF_HEIGHT - left_climber_position, CLIMBER_HEIGHT_DELTA)
 				&& ck::math::inRange(CLIMBER_HANDOFF_HEIGHT - right_climber_position, CLIMBER_HEIGHT_DELTA))
 			{
+				next_climber_state = ClimberStates::WAIT_FOR_STABLE;
+			}
+			break;
+		}
+
+		case ClimberStates::WAIT_FOR_STABLE://no op
+		{
+			if (time_in_state > ros::Duration(1.5)){
 				next_climber_state = ClimberStates::GRAB_NEXT_BAR_INITIAL_UNWINCH;
 			}
 			break;
@@ -340,6 +369,8 @@ void step_state_machine()
 		case ClimberStates::END://End
 		{
 			//deploy fireworks
+			left_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
+			right_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
 			break;
 		}
 
@@ -356,8 +387,8 @@ void step_state_machine()
 
 void config_climber_motor(Motor* m)
 {
-	m->config().set_supply_current_limit(true, 50, 0, 0);
-	m->config().set_voltage_compensation_saturation(10);
+	m->config().set_supply_current_limit(true, 40, 25, 2);
+	m->config().set_voltage_compensation_saturation(11);
 	m->config().set_voltage_compensation_enabled(true);
 	m->config().set_neutral_mode(MotorConfig::NeutralMode::BRAKE);
 	m->config().set_forward_soft_limit(CLIMBER_MAX_LIMIT);
@@ -365,10 +396,10 @@ void config_climber_motor(Motor* m)
 	m->config().set_reverse_soft_limit(-0.2);
 	m->config().set_reverse_soft_limit_enable(true);
 	m->config().set_kP(0.1);
-	m->config().set_kD(0.14);
+	m->config().set_kD(0.07);
 	m->config().set_kF(0.060546875);
-	m->config().set_motion_cruise_velocity(16500);
-	m->config().set_motion_acceleration(29000);
+	m->config().set_motion_cruise_velocity(14500);
+	m->config().set_motion_acceleration(22000);
 	m->config().set_motion_s_curve_strength(5);
 	m->config().apply();
 }
