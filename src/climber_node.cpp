@@ -340,7 +340,7 @@ void step_state_machine()
 			{
 				next_climber_state = ClimberStates::END;
 			}
-			else if (time_in_state > ros::Duration(4) || (time_in_state > ros::Duration(1) && imu_pitch_rad < -0.12 && imu_pitch_rad_per_sec < -1)){
+			else if (time_in_state > ros::Duration(4) || (time_in_state > ros::Duration(2) && imu_pitch_rad > 0.12 && imu_pitch_rad_per_sec > 1)){
 				bar_counter++;
 				next_climber_state = ClimberStates::FINISH_WINCHING;
 			}
