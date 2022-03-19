@@ -237,12 +237,12 @@ void step_state_machine()
 		{
 			left_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, CLIMBER_INITIAL_GRAB_HEIGHT, 0);
 			right_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, CLIMBER_INITIAL_GRAB_HEIGHT, 0);
-			climber_arm_solenoid->set(Solenoid::SolenoidState::OFF);
 			climber_static_hooks_solenoid->set(Solenoid::SolenoidState::ON);
 
 			if(ck::math::inRange(CLIMBER_INITIAL_GRAB_HEIGHT - left_climber_position, CLIMBER_HEIGHT_DELTA)
 				&& ck::math::inRange(CLIMBER_INITIAL_GRAB_HEIGHT - right_climber_position, CLIMBER_HEIGHT_DELTA))
 			{
+				climber_arm_solenoid->set(Solenoid::SolenoidState::OFF);
 				next_climber_state = ClimberStates::GRAB_INITIAL_BAR;
 			}
 			break;
@@ -346,7 +346,7 @@ void step_state_machine()
 			{
 				next_climber_state = ClimberStates::END;
 			}
-			else if (time_in_state > ros::Duration(4) || (time_in_state > ros::Duration(2) && imu_pitch_rad > 0.12 && imu_pitch_rad_per_sec > 1)){
+			else if (time_in_state > ros::Duration(1) || (time_in_state > ros::Duration(1) && imu_pitch_rad > 0.12 && imu_pitch_rad_per_sec > 1)){
 				bar_counter++;
 				next_climber_state = ClimberStates::FINISH_WINCHING;
 				left_climber_master->config().set_motion_cruise_velocity(14500);
