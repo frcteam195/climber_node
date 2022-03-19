@@ -314,6 +314,12 @@ void step_state_machine()
 
 		case ClimberStates::GRAB_NEXT_BAR_RETRACT_PISTONS://actuate solenoids
 		{
+			left_climber_master->config().set_motion_cruise_velocity(7000);
+			left_climber_master->config().set_motion_acceleration(12000);
+			right_climber_master->config().set_motion_cruise_velocity(7000);
+			right_climber_master->config().set_motion_acceleration(12000);
+			left_climber_master->config().apply();
+			right_climber_master->config().apply();
 			climber_arm_solenoid->set(Solenoid::SolenoidState::OFF);
 			if(time_in_state > ros::Duration(0.5) || (time_in_state > ros::Duration(0.5) && bar_counter > 0 && imu_pitch_rad > 0 && imu_pitch_rad_per_sec > 1))
 			{
@@ -343,6 +349,12 @@ void step_state_machine()
 			else if (time_in_state > ros::Duration(4) || (time_in_state > ros::Duration(2) && imu_pitch_rad > 0.12 && imu_pitch_rad_per_sec > 1)){
 				bar_counter++;
 				next_climber_state = ClimberStates::FINISH_WINCHING;
+				left_climber_master->config().set_motion_cruise_velocity(14500);
+				left_climber_master->config().set_motion_acceleration(22000);
+				right_climber_master->config().set_motion_cruise_velocity(14500);
+				right_climber_master->config().set_motion_acceleration(22000);
+				left_climber_master->config().apply();
+				right_climber_master->config().apply();
 			}
 			break;
 		}
