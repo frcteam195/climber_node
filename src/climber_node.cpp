@@ -194,8 +194,15 @@ void auto_balance_climb(double target_position)
 {
 	//double arbFF = CLIMBER_BALANCE_GAIN * imu_roll_rad;
 	double arbFF = 0;
-	left_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, target_position, arbFF);
-	right_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, target_position, -arbFF);
+	(void) arbFF;
+	double offset = 0;
+	if (target_position != 0)
+	{
+		offset = -1;
+	}
+	(void)offset;
+	left_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, target_position, 0);
+	right_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, target_position, 0);
 }
 
 void step_state_machine()
@@ -419,7 +426,7 @@ void config_climber_motor(Motor* m)
 	m->config().set_forward_soft_limit_enable(true);
 	m->config().set_reverse_soft_limit(-0.2);
 	m->config().set_reverse_soft_limit_enable(true);
-	m->config().set_kP(0.1);
+	m->config().set_kP(0.15);
 	m->config().set_kD(0.07);
 	m->config().set_kF(0.060546875);
 	m->config().set_motion_cruise_velocity(14500);
