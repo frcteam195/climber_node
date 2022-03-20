@@ -1,0 +1,2 @@
+int8 climber_state
+bool climber_retract_intake

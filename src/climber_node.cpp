@@ -16,6 +16,7 @@
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2/LinearMath/Matrix3x3.h"
 #include "climber_node/Climber_Diagnostics.h"
+#include "climber_node/Climber_Status.h"
 
 
 #define LEFT_CLIMBER_MASTER_CAN_ID 12
@@ -54,7 +55,7 @@ static double prev_imu_pitch_rad = 0;
 static ros::Time prev_time_imu = ros::Time(0);
 static double bar_counter = 0;
 
-enum class ClimberStates
+enum class ClimberStates : int
 {
 
 	IDLE,
@@ -200,6 +201,8 @@ void auto_balance_climb(double target_position)
 void step_state_machine()
 {
 	static ros::Time time_state_entered = ros::Time::now();
+	static ros::Publisher climber_status_publisher = node->advertise<climber_node::Climber_Status>("/ClimberStatus", 1);
+	static climber_node::Climber_Status climber_status;
 
 	if(climber_state != next_climber_state)
 	{
@@ -221,6 +224,7 @@ void step_state_machine()
 	{
 		case ClimberStates::IDLE: //Stop all motors
 		{
+			climber_status.climber_retract_intake = false;
 			left_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 0, 0);
 			right_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 0, 0);
 			climber_arm_solenoid->set(Solenoid::SolenoidState::ON);
@@ -314,13 +318,20 @@ void step_state_machine()
 
 		case ClimberStates::GRAB_NEXT_BAR_RETRACT_PISTONS://actuate solenoids
 		{
-			left_climber_master->config().set_motion_cruise_velocity(7000);
-			left_climber_master->config().set_motion_acceleration(12000);
-			right_climber_master->config().set_motion_cruise_velocity(7000);
-			right_climber_master->config().set_motion_acceleration(12000);
-			left_climber_master->config().apply();
-			right_climber_master->config().apply();
+			if (bar_counter < 1)
+			{
+				left_climber_master->config().set_motion_cruise_velocity(7000);
+				left_climber_master->config().set_motion_acceleration(12000);
+				right_climber_master->config().set_motion_cruise_velocity(7000);
+				right_climber_master->config().set_motion_acceleration(12000);
+				left_climber_master->config().apply();
+				right_climber_master->config().apply();
+			}
 			climber_arm_solenoid->set(Solenoid::SolenoidState::OFF);
+			if (bar_counter > 0)
+			{
+				climber_status.climber_retract_intake = true;
+			}
 			if(time_in_state > ros::Duration(0.5) || (time_in_state > ros::Duration(0.5) && bar_counter > 0 && imu_pitch_rad > 0 && imu_pitch_rad_per_sec > 1))
 			{
 				next_climber_state = ClimberStates::GRAB_NEXT_BAR_PULL_UP;
@@ -394,7 +405,8 @@ void step_state_machine()
 		}
 	}
 
-	
+	climber_status.climber_state = (int8_t) climber_state;
+	climber_status_publisher.publish(climber_status);
 }
 
 void config_climber_motor(Motor* m)

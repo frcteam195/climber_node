@@ -69,6 +69,7 @@ find_package(catkin REQUIRED COMPONENTS roscpp message_generation std_msgs rio_c
 add_message_files(
   FILES
   Climber_Diagnostics.msg
+  Climber_Status.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
