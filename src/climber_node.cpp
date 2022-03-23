@@ -17,6 +17,7 @@
 #include "tf2/LinearMath/Matrix3x3.h"
 #include "climber_node/Climber_Diagnostics.h"
 #include "climber_node/Climber_Status.h"
+#include "turret_node/Turret_Status.h"
 
 
 #define LEFT_CLIMBER_MASTER_CAN_ID 12
@@ -107,6 +108,7 @@ static bool forced_reset_retract_hooks = false;
 static std::map<uint16_t, rio_control_node::Motor_Info> motor_status_map;
 static double left_climber_position = 0.0;
 static double right_climber_position = 0.0;
+static bool turret_ready_to_climb = false;
 
 
 std::string climber_state_to_string(ClimberStates state)
@@ -144,6 +146,14 @@ void hmi_signal_callback(const hmi_agent_node::HMI_Signals& msg)
 	begin_climb = msg.begin_climb;
 	retract_hooks = msg.retract_hooks;
 	forced_reset_retract_hooks = msg.forced_reset_retract_hooks;
+}
+
+void turret_status_callback(const turret_node::Turret_Status& msg)
+{
+	if (!turret_ready_to_climb)
+	{
+		turret_ready_to_climb = msg.ready_to_climb;
+	}
 }
 
 void motor_status_callback(const rio_control_node::Motor_Status& msg)
@@ -248,11 +258,11 @@ void step_state_machine()
 		{
 			left_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, CLIMBER_INITIAL_GRAB_HEIGHT, 0);
 			right_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, CLIMBER_INITIAL_GRAB_HEIGHT, 0);
-			climber_static_hooks_solenoid->set(Solenoid::SolenoidState::ON);
-
 			if(ck::math::inRange(CLIMBER_INITIAL_GRAB_HEIGHT - left_climber_position, CLIMBER_HEIGHT_DELTA)
-				&& ck::math::inRange(CLIMBER_INITIAL_GRAB_HEIGHT - right_climber_position, CLIMBER_HEIGHT_DELTA))
+				&& ck::math::inRange(CLIMBER_INITIAL_GRAB_HEIGHT - right_climber_position, CLIMBER_HEIGHT_DELTA)
+				&& turret_ready_to_climb)
 			{
+				climber_static_hooks_solenoid->set(Solenoid::SolenoidState::ON);
 				climber_arm_solenoid->set(Solenoid::SolenoidState::OFF);
 				next_climber_state = ClimberStates::GRAB_INITIAL_BAR;
 			}
@@ -456,6 +466,7 @@ int main(int argc, char **argv)
 	ros::Subscriber hmi_subscribe = node->subscribe("/HMISignals", 1, hmi_signal_callback);
 	ros::Subscriber imu_subscribe = node->subscribe("/RobotIMU", 1, imu_sensor_callback);
 	ros::Subscriber motor_status_subscribe = node->subscribe("/MotorStatus", 1, motor_status_callback);
+	ros::Subscriber turret_status_subscribe = node->subscribe("/TurretStatus", 1, turret_status_callback);
 
 	left_climber_master = new Motor(LEFT_CLIMBER_MASTER_CAN_ID, Motor::Motor_Type::TALON_FX);
 	right_climber_master = new Motor(RIGHT_CLIMBER_MASTER_CAN_ID, Motor::Motor_Type::TALON_FX);
