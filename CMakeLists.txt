@@ -70,6 +70,7 @@ add_message_files(
   FILES
   Climber_Diagnostics.msg
   Climber_Status.msg
+  Turret_Ready.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

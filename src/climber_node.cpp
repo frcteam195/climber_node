@@ -17,7 +17,7 @@
 #include "tf2/LinearMath/Matrix3x3.h"
 #include "climber_node/Climber_Diagnostics.h"
 #include "climber_node/Climber_Status.h"
-#include "turret_node/Turret_Status.h"
+#include "climber_node/Turret_Ready.h"
 
 
 #define LEFT_CLIMBER_MASTER_CAN_ID 12
@@ -148,7 +148,7 @@ void hmi_signal_callback(const hmi_agent_node::HMI_Signals& msg)
 	forced_reset_retract_hooks = msg.forced_reset_retract_hooks;
 }
 
-void turret_status_callback(const turret_node::Turret_Status& msg)
+void turret_climb_ready_callback(const climber_node::Turret_Ready& msg)
 {
 	if (!turret_ready_to_climb)
 	{
@@ -466,7 +466,7 @@ int main(int argc, char **argv)
 	ros::Subscriber hmi_subscribe = node->subscribe("/HMISignals", 1, hmi_signal_callback);
 	ros::Subscriber imu_subscribe = node->subscribe("/RobotIMU", 1, imu_sensor_callback);
 	ros::Subscriber motor_status_subscribe = node->subscribe("/MotorStatus", 1, motor_status_callback);
-	ros::Subscriber turret_status_subscribe = node->subscribe("/TurretStatus", 1, turret_status_callback);
+	ros::Subscriber turret_climb_ready_subscribe = node->subscribe("/TurretClimbReady", 1, turret_climb_ready_callback);
 
 	left_climber_master = new Motor(LEFT_CLIMBER_MASTER_CAN_ID, Motor::Motor_Type::TALON_FX);
 	right_climber_master = new Motor(RIGHT_CLIMBER_MASTER_CAN_ID, Motor::Motor_Type::TALON_FX);
