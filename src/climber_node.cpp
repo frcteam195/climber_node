@@ -26,7 +26,7 @@
 // #define RIGHT_CLIMBER_FOLLOWER_CAN_ID 15
 
 #define CLIMBER_MOVEABLE_ARM_SOLENOID_ID 6
-#define CLIMBER_STATIC_HOOKS_SOLENOID_ID 7
+#define CLIMBER_STATIC_HOOKS_SOLENOID_ID 4
 
 ros::NodeHandle* node;
 
@@ -244,7 +244,7 @@ void step_state_machine()
 			climber_status.climber_retract_intake = false;
 			left_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 0, 0);
 			right_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 0, 0);
-			climber_arm_solenoid->set(Solenoid::SolenoidState::ON);
+			climber_arm_solenoid->set(Solenoid::SolenoidState::FORWARD);
 		
 			if(deploy_hooks)
 			{
@@ -263,7 +263,7 @@ void step_state_machine()
 				&& turret_ready_to_climb)
 			{
 				climber_static_hooks_solenoid->set(Solenoid::SolenoidState::ON);
-				climber_arm_solenoid->set(Solenoid::SolenoidState::OFF);
+				climber_arm_solenoid->set(Solenoid::SolenoidState::REVERSE);
 				next_climber_state = ClimberStates::GRAB_INITIAL_BAR;
 			}
 			break;
@@ -304,7 +304,7 @@ void step_state_machine()
 		{
 			left_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, CLIMBER_PARTIAL_RELEASE_HEIGHT, 0);
 			right_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, CLIMBER_PARTIAL_RELEASE_HEIGHT, 0);
-			climber_arm_solenoid->set(Solenoid::SolenoidState::ON);
+			climber_arm_solenoid->set(Solenoid::SolenoidState::FORWARD);
 
 			if(time_in_state > ros::Duration(0.5) && ck::math::inRange(CLIMBER_PARTIAL_RELEASE_HEIGHT - left_climber_position, CLIMBER_HEIGHT_DELTA)
 				&& ck::math::inRange(CLIMBER_PARTIAL_RELEASE_HEIGHT - right_climber_position, CLIMBER_HEIGHT_DELTA))
@@ -344,7 +344,7 @@ void step_state_machine()
 				left_climber_master->config().apply();
 				right_climber_master->config().apply();
 			}
-			climber_arm_solenoid->set(Solenoid::SolenoidState::OFF);
+			climber_arm_solenoid->set(Solenoid::SolenoidState::REVERSE);
 			if (bar_counter > 0)
 			{
 				climber_status.climber_retract_intake = true;
@@ -473,10 +473,10 @@ int main(int argc, char **argv)
 	config_climber_motor(left_climber_master);
 	config_climber_motor(right_climber_master);
 
-	climber_arm_solenoid = new Solenoid(CLIMBER_MOVEABLE_ARM_SOLENOID_ID, Solenoid::SolenoidType::SINGLE);
+	climber_arm_solenoid = new Solenoid(CLIMBER_MOVEABLE_ARM_SOLENOID_ID, Solenoid::SolenoidType::DOUBLE);
 	climber_static_hooks_solenoid = new Solenoid(CLIMBER_STATIC_HOOKS_SOLENOID_ID, Solenoid::SolenoidType::SINGLE);
 
-
+	climber_arm_solenoid->set(Solenoid::SolenoidState::FORWARD);
 	ros::Rate rate(100);
 
 	while(ros::ok())
