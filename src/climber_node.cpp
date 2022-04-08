@@ -32,12 +32,12 @@ ros::NodeHandle* node;
 
 static constexpr double CLIMBER_BALANCE_GAIN = 0.0795;
 static constexpr double CLIMBER_FULL_RETRACTION = 0;
-static constexpr double CLIMBER_HANDOFF_HEIGHT = (3041.0 / 2048.0) / 20.0;
-static constexpr double CLIMBER_WAIT_HEIGHT = (160689.0 / 2048.0) / 20.0;
-static constexpr double CLIMBER_INITIAL_GRAB_HEIGHT = (318150.0 / 2048.0) / 20.0;
-static constexpr double CLIMBER_PARTIAL_RELEASE_HEIGHT = (97875.0 / 2048.0) / 20.0;
-static constexpr double CLIMBER_MAX_EXTENSION = (393379.0 / 2048.0) / 20.0;
-static constexpr double CLIMBER_MAX_LIMIT = (446960.0 / 2048.0) / 20.0;
+static constexpr double CLIMBER_HANDOFF_HEIGHT = 0.62;	//Updated
+static constexpr double CLIMBER_WAIT_HEIGHT = 4.6;	//Updated
+static constexpr double CLIMBER_INITIAL_GRAB_HEIGHT = 8.60834;	//Updated
+static constexpr double CLIMBER_PARTIAL_RELEASE_HEIGHT = 3.0;	//Updated
+static constexpr double CLIMBER_MAX_EXTENSION = 10.6;	//Updated
+static constexpr double CLIMBER_MAX_LIMIT = 10.912109375;
 static constexpr double CLIMBER_HEIGHT_DELTA = 0.25;
 
 
@@ -400,7 +400,7 @@ void step_state_machine()
 
 		case ClimberStates::WAIT_FOR_STABLE://no op
 		{
-			if (time_in_state > ros::Duration(1.5)){
+			if (time_in_state > ros::Duration(1)){
 				next_climber_state = ClimberStates::GRAB_NEXT_BAR_INITIAL_UNWINCH;
 			}
 			break;
