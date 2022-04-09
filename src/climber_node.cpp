@@ -245,6 +245,7 @@ void step_state_machine()
 			left_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 0, 0);
 			right_climber_master->set(Motor::Control_Mode::MOTION_MAGIC, 0, 0);
 			climber_arm_solenoid->set(Solenoid::SolenoidState::FORWARD);
+			climber_static_hooks_solenoid->set(Solenoid::SolenoidState::OFF);
 		
 			if(deploy_hooks)
 			{
@@ -411,6 +412,7 @@ void step_state_machine()
 			//deploy fireworks
 			left_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
 			right_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
+			climber_static_hooks_solenoid->set(Solenoid::SolenoidState::OFF);
 			break;
 		}
 
@@ -418,6 +420,7 @@ void step_state_machine()
 		{
 			left_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
 			right_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
+			climber_static_hooks_solenoid->set(Solenoid::SolenoidState::OFF);
 			break;
 		}
 	}
