@@ -32,7 +32,7 @@ ros::NodeHandle* node;
 
 static constexpr double CLIMBER_BALANCE_GAIN = 0.0795;
 static constexpr double CLIMBER_FULL_RETRACTION = 0;
-static constexpr double CLIMBER_HANDOFF_HEIGHT = 0.62;	//Updated
+static constexpr double CLIMBER_HANDOFF_HEIGHT = 0.58;	//Updated
 static constexpr double CLIMBER_WAIT_HEIGHT = 4.6;	//Updated
 static constexpr double CLIMBER_INITIAL_GRAB_HEIGHT = 8.60834;	//Updated
 static constexpr double CLIMBER_PARTIAL_RELEASE_HEIGHT = 3.0;	//Updated
