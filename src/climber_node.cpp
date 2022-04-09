@@ -104,6 +104,7 @@ static bool deploy_hooks = false;
 static bool begin_climb = false;
 static bool retract_hooks = false;
 static bool forced_reset_retract_hooks = false;
+static bool retry_climb = false;
 
 static std::map<uint16_t, rio_control_node::Motor_Info> motor_status_map;
 static double left_climber_position = 0.0;
@@ -146,6 +147,11 @@ void hmi_signal_callback(const hmi_agent_node::HMI_Signals& msg)
 	begin_climb = msg.begin_climb;
 	retract_hooks = msg.retract_hooks;
 	forced_reset_retract_hooks = msg.forced_reset_retract_hooks;
+	
+	if (!retry_climb)
+	{
+		retry_climb = msg.climber_retry_last_stage;
+	}
 }
 
 void turret_climb_ready_callback(const climber_node::Turret_Ready& msg)
@@ -413,6 +419,14 @@ void step_state_machine()
 			left_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
 			right_climber_master->set(Motor::Control_Mode::PERCENT_OUTPUT, 0, 0);
 			climber_static_hooks_solenoid->set(Solenoid::SolenoidState::OFF);
+
+			if (retry_climb)
+			{
+				next_climber_state = ClimberStates::GRAB_NEXT_BAR_INITIAL_UNWINCH;
+				retry_climb = false;
+				bar_counter++;
+			}
+
 			break;
 		}
 
