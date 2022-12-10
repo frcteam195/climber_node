@@ -5,7 +5,7 @@
 #include <string>
 #include <mutex>
 #include <map>
-#include "hmi_agent_node/HMI_Signals.h"
+#include "ck_ros_msgs_node/HMI_Signals.h"
 #include "ck_utilities/CKMath.hpp"
 #include "ck_utilities/Motor.hpp"
 #include "ck_utilities/Solenoid.hpp"
@@ -140,7 +140,7 @@ void publish_diagnostic_data()
     diagnostic_publisher.publish(diagnostics);
 }
 
-void hmi_signal_callback(const hmi_agent_node::HMI_Signals& msg)
+void hmi_signal_callback(const ck_ros_msgs_node::HMI_Signals& msg)
 {
     stop_climber = msg.stop_climber || stop_climber;
 	deploy_hooks = msg.deploy_hooks;
